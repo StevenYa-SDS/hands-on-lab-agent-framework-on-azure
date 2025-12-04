@@ -40,4 +40,7 @@ resource "azapi_resource" "embedding_model_deployment" {
       name     = "GlobalStandard"
     }
   }
+  depends_on = [
+    azapi_resource.chat_model_deployment
+  ]
 }

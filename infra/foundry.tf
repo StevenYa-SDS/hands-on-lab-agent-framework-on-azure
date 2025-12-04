@@ -1,5 +1,5 @@
 resource "azapi_resource" "foundry" {
-  type      = "Microsoft.CognitiveServices/accounts@2025-07-01-preview"
+  type      = "Microsoft.CognitiveServices/accounts@2025-06-01"
   name      = format("aif-%s", local.resource_suffix_kebabcase)
   parent_id = local.resource_group_id
   location  = local.resource_group_location
@@ -13,8 +13,9 @@ resource "azapi_resource" "foundry" {
 
     properties = {
       allowProjectManagement = true
-      publicNetworkAccess = "Enabled"
-      customSubDomainName = format("ais-%s", local.resource_suffix_kebabcase)
+      publicNetworkAccess    = "Enabled"
+      disableLocalAuth       = true
+      customSubDomainName    = format("aif-%s", local.resource_suffix_kebabcase)
     }
     sku = {
       name = "S0"
@@ -25,5 +26,5 @@ resource "azapi_resource" "foundry" {
 
 moved {
   from = azapi_resource.ai_services
-  to = azapi_resource.foundry
+  to   = azapi_resource.foundry
 }

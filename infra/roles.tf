@@ -9,3 +9,9 @@ resource "azurerm_role_assignment" "user_azure_ai_user" {
   role_definition_name = "Azure AI User"
   principal_id         = data.azurerm_client_config.current.object_id
 }
+
+resource "azurerm_role_assignment" "user_azure_ai_project_manager" {
+  scope                = azapi_resource.foundry.id
+  role_definition_name = "Azure AI Project Manager"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
