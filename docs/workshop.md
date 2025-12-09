@@ -180,10 +180,13 @@ The deployment should take around 5 minutes to complete.
 
 Let's create a first simple agent using the Agent Framework and a Foundry model to respond to basic queries.
 
-Inside the `src` folder, you will find a `pyproject.toml` file that defines the dependencies for your Python project. Make sure to install them using pip:
+Inside the `src` folder, you will find a `pyproject.toml` file that defines the dependencies for your Python project. Make sure to install them using `uv` and activate the virtual environment:
 
 ```bash
+# Install dependencies
 uv sync
+# Activate the virtual environment
+source .venv/bin/activate
 ```
 
 Then, rename the `.env.template` file to `.env` and update the environment variables with the values from your deployed infrastructure.
@@ -192,65 +195,104 @@ To connect to the AI chat model you need, you will use the Microsoft Foundry pro
 
 Go to Azure, inside your resource group, select the Microsoft Foundry project: 
 
-IMAGE 
+![resource-group-foundry-project](./assets/resource-group-foundry-project.png)
 
 Then select `Go to Foundry portal`: 
 
-IMAGE 
+![open-foundry-project](./assets/open-foundry-project.png)
 
-You will be redirected to the home page of Microsoft Foundry Portal where you will have to copy paste the endpoint and assign it's value inside the `.env` file in the `AZURE_AI_PROJECT_ENDPOINT` environment variable. 
+You will be redirected to the home page of Microsoft Foundry Portal where you will have to copy paste the endpoint
 
-When it's done, due to the role`assigned to you on this cloud resource, you can have access to the models with your code. 
+![foundry-project-endpoint](./assets/foundry-project-endpoint.png)
+
+Then assign it's value inside the `.env` file in the `AZURE_AI_PROJECT_ENDPOINT` environment variable. 
+
+When it's done, due to the role assigned to you on this cloud resource, you can have access to the models with your code. 
 
 Now let's create your first agent! 
 
-Inside `main.py` first load the environment file :
+Inside `main.py` first, define the structure of the file and load the `.env` file and add the imports:
 
 ```python
+import os
+from agent_framework.azure import AzureAIAgentClient
+from azure.identity.aio import AzureCliCredential
 from dotenv import load_dotenv
+from agent_framework.devui import serve
 
 load_dotenv()
+
+def main():
+    ## Create the agent here
+
+if __name__ == "__main__":
+    main()
 ```
 
-Then, create a simple agent using the Agent Framework to analyze an ask.
+Then, let's create the first agent: IssueAnalyzerAgent, using the Agent Framework to analyze an ask.
 
 ```python
-TODO
+settings = {
+    "project_endpoint": os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+    "model_deployment_name": os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],
+    "async_credential": AzureCliCredential(),
+}
+issue_analyzer_agent = AzureAIAgentClient(**settings).create_agent(
+    instructions="""
+                    You are analyzing issues. 
+                    If the ask is a feature request the complexity should be 'NA'.
+                    If the issue is a bug, analyze the stack trace and provide the likely cause and complexity level
+                """,
+    name="IssueAnalyzerAgent",
+) 
+```
+
+For the purpose of this lab, we voluntarily use a `settings` dictionary to pass the parameters to create the agent to be able to reuse it later when creating other agents but you can also pass the parameters directly inside the `AzureAIAgentClient` constructor.
+
+The `AzureAIAgentClient` class allows you to create agents that leverage Azure AI models deployed in your Microsoft Foundry project.
+
+To help you build and test your agent more easily, instead of relying only on the console output, let's introduce Dev UI integration.
+
+Let's modify the `main.py` file to add Dev UI integration just after the agent creation.
+
+```python
+serve(entities=[issue_analyzer_agent], port=8090, auto_open=True, tracing_enabled=True)
+```
+
+Now if you run your agent again:
+
+```bash
+uv run python main.py
 ```
 
 Let's run the agent with a simple prompt to analyze a first ask:
 
-```python
-TODO
+```txt
+There is an issue with the Azure App Services is causing intermittent 500 errors. 
+                        Traceback (most recent call last):
+                                    File "<string>", line 38, in <module>
+                                        main_application()                    ← Entry point
+                                    File "<string>", line 30, in main_application
+                                        results = process_data_batch(test_data)  ← Calls processor
+                                    File "<string>", line 13, in process_data_batch
+                                        avg = calculate_average(batch)        ← Calls calculator
+                                    File "<string>", line 5, in calculate_average
+                                        return total / count                  ← ERROR HERE
+                                            ~~~~~~^~~~~~~
+                                    ZeroDivisionError: division by zero
 ```
 
-The final `main.py` file can be found in `solutions/lab_1.py`.
+or you can also ask a feature request:
 
-Now, run your agent by opening a terminal and inside the `src` folder:
-
-```bash
-uv run python main.py
+```txt
+Please add a dark mode to the application to improve user experience during night time usage.
 ```
 
 If you try to run the agent multiple times, you might hit the rate limit of tokens per minute. If that happens, you will see a 429 error. Just wait a minute and try again.
 
 Also, if you look at the output, the response is always different because the model is generative and non-deterministic by default, but you ask the model to structure the output in a specific format. That's what you will do in the next step.
 
-To help you build and test your agent more easily, instead of relying only on the console output, let's introduce Dev UI integration.
-
-Let's modify the `main.py` file to add Dev UI integration.
-
-```python
-TODO
-```
-
-Now if you run your agent again:
-
-```bash
-devui main.py
-```
-
-The final `main.py` file can be found in `solutions/lab_1_bis.py`.
+> The final `main.py` file can be found in `solutions/lab_1.py`.
 
 ---
 
@@ -286,18 +328,24 @@ As you can see, the `IssueAnalyzer` class defines multiple fields that the agent
 Now, let's modify the `main.py` file to use this response format. Inside the creation of the agent, add the `response_format` parameter:
 
 ```python
-TODO
+response_format=IssueAnalyzer
+```
+
+Also, make sure to import the `IssueAnalyzer` class at the top of the file:
+
+```python
+from models.issue_analyzer import IssueAnalyzer
 ```
 
 You can now run your agent again:
 
 ```bash
-devui main.py
+uv run python main.py
 ```
 
 You should notice that the output is now structured according to the `IssueAnalyzer` class you defined.
 
-The final `main.py` file can be found in `solutions/lab_2.py`.
+> The final `main.py` file can be found in `solutions/lab_2.py`.
 
 ---
 
@@ -330,27 +378,59 @@ class TimePerIssueTools:
                 return "8 hours"
             case _:
                 return "Unknown complexity level"
+    
+    def calculate_financial_cost_per_issue(
+        self,
+        complexity: Annotated[Complexity, Field(description="The complexity level of the issue.")],
+    ) -> str:
+        """Calculate the financial cost based on issue complexity."""
+        match complexity:
+            case Complexity.NA:
+                return "$50"
+            case Complexity.LOW:
+                return "$100"
+            case Complexity.MEDIUM:
+                return "$200"
+            case Complexity.HIGH:
+                return "$400"
+            case _:
+                return "Unknown complexity level"
 ```
 
-This class defines a single tool that calculates the estimated time to resolve an issue based on its complexity. Of course, you can implement more tools as needed, with API calls or other logic.
+This class defines a single tool that calculates the estimated time to resolve an issue based on its complexity and also a financial cost based on the complexity. Of course, you can implement more tools as needed, with API calls or other logic.
 
-Now, let's modify the `main.py` file to add this tool to your agent inside the agent creation in the `tools` parameter:
+Now, let's modify the `main.py` file to add this tool to your agent.
+
+First, import the `TimePerIssueTools` class at the top of the file:
 
 ```python
-TODO
+from tools.time_per_issue_tools import TimePerIssueTools
+```
+
+Then before the agent creation, create an instance of the `TimePerIssueTools` class:
+
+```python
+timePerIssueTools = TimePerIssueTools()
+```
+
+Inside the agent creation add the tools properties:
+
+```python
+tool_choice=ToolMode.AUTO,
+tools=[timePerIssueTools.calculate_time_based_on_complexity, timePerIssueTools.calculate_financial_cost_per_issue]
 ```
 
 Now, run your agent again:
 
 ```bash
-devui main.py
+uv run python main.py
 ```
 
 As you can see in the `Tools` tab of Dev UI, the agent used the `calculate_time_based_on_complexity` tool to estimate the time to resolve the issue based on its complexity.
 
 Your IssueAnalyzerAgent is now more precise and reliable!
 
-The final `main.py` file can be found in `solutions/lab_3.py`.
+> The final `main.py` file can be found in `solutions/lab_3.py`.
 
 ---
 
@@ -379,28 +459,49 @@ Once the token is created, make sure to copy it and paste it inside the `.env` f
 Now, let's create the GitHubAgent inside the `main.py` file. Just after the creation of the IssueAnalyzerAgent, add the following code:
 
 ```python
-TODO
+github_agent = AzureAIAgentClient(**settings).create_agent(
+    name="GitHubAgent",
+    instructions=f"""
+        You are a helpful assistant that can create an issue on the user's GitHub repository based on the input provided.
+        To create the issue, use the GitHub MCP tool.
+        You work on this repository: {os.environ["GITHUB_PROJECT_REPO"]}
+    """,
+    tools=HostedMCPTool(
+        name="GitHub MCP",
+        url="https://api.githubcopilot.com/mcp",
+        description="A GitHub MCP server for GitHub interactions",
+        approval_mode="never_require",
+        # PAT token, restricting which repos the MCP Server
+        headers={
+            "Authorization": f"Bearer {os.environ['GITHUB_MCP_PAT']}",
+        },
+    ),
+)
 ```
 
-As you can see, you dynamically load the MCP GitHub tool, pass the authentication parameters, and create the agent using this tool.
-
-To test the GitHubAgent, update the Dev UI setup to run the GitHubAgent instead of the IssueAnalyzerAgent:
+Don't forget to import the `HostedMCPTool` class at the top of the file:
 
 ```python
-TODO
+from agent_framework import HostedMCPTool
+```
+
+As you can see, you dynamically load the MCP GitHub tool, pass the authentication parameter, and create the agent using this tool.
+
+Finally, as you did for the IssueAnalyzerAgent, add the GitHubAgent to the Dev UI integration:
+
+```python
+serve(entities=[issue_analyzer_agent, github_agent], port=8090, auto_open=True, tracing_enabled=True)
 ```
 
 Now, run your agent again:
 
 ```bash
-devui main.py
+uv run python main.py
 ```
 
 If you ask the agent to create a ticket, it should create a new issue in your GitHub repository!
 
-IMAGE
-
-The final `main.py` file can be found in `solutions/lab_4.py`.
+> The final `main.py` file can be found in `solutions/lab_4.py`.
 
 ---
 
@@ -430,7 +531,7 @@ TODO
 Now, run your agent again:
 
 ```bash
-devui main.py
+uv run python main.py
 ```
 
 You can now interact with the group chat workflow. The manager agent will route your requests to the appropriate agent based on the prompt.
@@ -474,7 +575,7 @@ TODO
 Finally, run your agent again:
 
 ```bash
-devui main.py
+uv run python main.py
 ```
 
 The final `main.py` file can be found in `solutions/lab_6.py`.
