@@ -5,7 +5,7 @@ title: Product Hands-on Lab - Agent Framework on Azure
 short_title: Agent Framework on Azure
 description: This workshop will cover how to build agentic applications using the Agent Framework on Azure, leveraging various Azure services to create scalable and efficient solutions.
 level: beginner # Required. Can be 'beginner', 'intermediate' or 'advanced'
-navigation_numbering: false
+navigation_numbering: true
 authors: # Required. You can add as many authors as needed
   - Olivier Mertens
   - David Rei
@@ -26,17 +26,39 @@ audience: developers, architects, AI engineers
 
 Welcome to this hands-on lab! In this workshop, you will learn how to build agentic applications using the Agent Framework on Azure.
 
+## What You Will Learn
 
+In this hands-on lab, you will build a **Helpdesk Ops Assistant** powered by AI agents. This multi-agent system will handle internal support tickets by leveraging enterprise best practices (RAG), MCP servers, and native tools to provide intelligent assistance.
 
-Scénario : “Helpdesk Ops Assistant”
-Tu construis un mini‑helpdesk piloté par agents qui traite des tickets internes avec des FAQ d’entreprise (AI Search), un carnet d’actions IT (MCP server) et des outils natifs.
+### The Multi-Agent Architecture
 
+You will create a coordinated system of three specialized agents working together:
 
-Agent 1 – Orchestrator : route les requêtes et choisit le bon flux (Solo vs. Group Chat). 
-Agent 2 – Complexity Analyst (solo) : analyse le ticket, produit un output structuré (data contract) et propose la stratégie (réponse directe, création de ticket, escalade, docs Learn à citer). 
-Agent 3 – Learn Agent (MCP mslearn) : interroge la connaissance via Foundry IQ (et/ou un serveur MCP “mslearn”) pour fournir des citations Learn pertinentes. 
-Agent 4 – GitHub Agent (MCP github) : exécute les actions de ticketing GitHub (issue, labels, commentaires), en s’appuyant sur les éléments fournis par les 2 autres agents.
+**IssueAnalyzerAgent**  
+Analyzes support tickets using structured data contracts (Pydantic models), determines issue complexity, and provides detailed analysis of bugs and feature requests. This agent uses native tools to calculate accurate time estimates based on complexity levels.
 
+**GitHubAgent (MCP github)**  
+Executes GitHub ticketing actions (creating issues, adding labels, posting comments) based on the analysis provided by other agents. This agent leverages company-specific guidelines through RAG integration with your knowledge base.
+
+**DocsAgent (MCP mslearn)**  
+Queries Microsoft Learn documentation via MCP "mslearn" server to provide relevant documentation citations and technical guidance for issue resolution.
+
+### Key Technologies
+
+Throughout this workshop, you will:
+- Build agentic applications using **[Agent Framework][agent-framework-url]**
+- Integrate **Microsoft Foundry** for AI model deployment and knowledge management
+- Implement **Retrieval-Augmented Generation (RAG)** with vector stores and Foundry IQ
+- Use **Model Context Protocol (MCP)** servers for GitHub and Microsoft Learn integration
+- Structure agent responses with **data contracts** using Pydantic models
+- Create and use **native tools** for business logic (time estimation based on complexity)
+- Orchestrate agents using **Group Chat patterns** and **Sequential Workflows**
+- Leverage **Dev UI** for rapid agent development and testing
+- Build knowledge bases using **Foundry IQ managed indexes**
+
+By the end of this lab, you will have a fully functional helpdesk system where multiple AI agents collaborate to analyze issues, retrieve relevant documentation, and manage tickets automatically following company guidelines.
+
+[agent-framework-url]: https://github.com/microsoft/agent-framework
 
 ---
 
@@ -718,4 +740,19 @@ You can now run the project and test the full workflow or the GitHubAgent indivi
 
 ```bash
 uv run python src/create_data.py
+```
+
+> The final `main.py` file can be found in `solutions/lab_7.py`.
+
+---
+
+# Closing the workshop
+
+Once you're done with this lab you can delete the resource group you created at the beginning.
+
+To do so, click on `delete resource group` in the Azure Portal to delete all the resources and audio content at once. The following Az-Cli command can also be used to delete the resource group :
+
+```bash
+# Delete the resource group with all the resources
+az group delete --name <resource-group>
 ```
