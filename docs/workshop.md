@@ -142,7 +142,7 @@ Visual Studio Code Extensions to install :
 - [github.copilot-chat][github-copilot-chat-extension]
 - [humao.rest-client][humao-rest-client-extension]
 - [ms-python.vscode-pylance][ms-python-vscode-pylance-extension]
-- [ms-vscode-remote.remote-containers][ms-vscode-remote-remote-containers-extension]
+- [ms-vscode-remote.remote-containers][ms-vscode-remote-containers-extension]
 - [charliermarsh.ruff][charliermarsh-ruff-extension]
 - [ms-python.debugpy][ms-python-debugpy-extension]
 - [hashicorp.terraform][hashicorp-terraform-extension]
@@ -205,6 +205,7 @@ The deployment should take around 5 minutes to complete.
 [ms-python-bandit-extension]: https://marketplace.visualstudio.com/items?itemName=ms-python.bandit
 [ms-python-debugpy-extension]: https://marketplace.visualstudio.com/items?itemName=ms-python.debugpy
 [hashicorp-terraform-extension]: https://marketplace.visualstudio.com/items?itemName=hashicorp.terraform
+[ms-vscode-remote-containers-extension]: https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers
 [az-cli-install]: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
 [az-portal]: https://portal.azure.com
 [vs-code]: https://code.visualstudio.com/
