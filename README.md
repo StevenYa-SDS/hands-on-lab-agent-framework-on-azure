@@ -14,6 +14,7 @@ Or view it online: `https://aka.ms/ws?src=gh:microsoft/hands-on-lab-agent-framew
 
 You can use the provided dev container configuration to set up a consistent development environment. This is especially useful if you are using GitHub Codespaces or Visual Studio Code with the Remote - Containers extension.
 
+
 ### Local Development Tools
 
 | Tool | Description | Installation |
@@ -88,6 +89,29 @@ Then navigate to the `infra` directory and initialize terraform:
 
 ```bash
 cd infra && terraform init
+```
+
+#### Note: Fix for `chmod ... operation not permitted` during `terraform init`
+
+If you see an error like `chmod ... operation not permitted` while Terraform is downloading providers, your repo is likely on a Windows-backed mount (common with some Dev Container / WSL / Codespaces setups). That filesystem doesn't support Unix permission changes, but Terraform tries to `chmod` provider binaries and temporary lock files.
+
+This repo includes a pre-generated provider lock file ([infra/.terraform.lock.hcl](infra/.terraform.lock.hcl)). To make Terraform work reliably, store Terraform's internal working data (downloaded providers, plugin cache, etc.) on a Linux filesystem path (e.g., `/vscode`):
+
+```bash
+cd infra
+mkdir -p /vscode/tfdata/plugin-cache
+
+# Use a Linux filesystem for Terraform's working directory and plugin cache
+export TF_DATA_DIR=/vscode/tfdata/infra
+export TF_PLUGIN_CACHE_DIR=/vscode/tfdata/plugin-cache
+
+terraform init
+```
+
+If you prefer a single command:
+
+```bash
+cd infra && TF_DATA_DIR=/vscode/tfdata/infra TF_PLUGIN_CACHE_DIR=/vscode/tfdata/plugin-cache terraform init
 ```
 
 Then run the following command to deploy the infrastructure:
