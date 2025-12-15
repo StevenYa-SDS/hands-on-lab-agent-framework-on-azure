@@ -122,3 +122,6 @@ Then run the following command to deploy the infrastructure:
 # Apply the deployment directly
 terraform apply -auto-approve
 ```
+
+Or view it online: `https://aka.ms/agf-lab`
+
