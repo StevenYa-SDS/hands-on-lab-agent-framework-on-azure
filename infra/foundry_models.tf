@@ -8,8 +8,8 @@ resource "azapi_resource" "chat_model_deployment" {
       currentCapacity = 50
       model = {
         format  = "OpenAI"
-        name    = "gpt-4.1"
-        version = "2025-04-14"
+        name    = "gpt-4o-mini"
+        version = "2024-07-18"
       }
       raiPolicyName = "Microsoft.DefaultV2"
     }
